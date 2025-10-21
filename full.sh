@@ -7,6 +7,8 @@ if [ -z "$BASE_PATH" ]; then
 fi
 
 bash ./01_merge.sh $BASE_PATH
-bash ./02_bed.sh $BASE_PATH
-bash ./03_pca.sh $BASE_PATH
-python ./04_plot.py $BASE_PATH
+bash ./02_apply_filter.sh $BASE_PATH
+python ./03_distribution_analyze.py $BASE_PATH
+bash ./10_kinship.sh $BASE_PATH
+bash ./20_pca.sh $BASE_PATH
+python ./40_plot.py $BASE_PATH
