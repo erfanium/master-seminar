@@ -7,11 +7,19 @@ fi
   
 IN_PATH=$BASE_PATH/01_merged/data.vcf
 OUT_PATH=$BASE_PATH/02_filtered/data.vcf
+SNP_FILTER=${SNP_FILTER:-'none'}
 
 # ensure output directory exists
 mkdir -p $(dirname $OUT_PATH)
 
-bcftools view -i 'MAF<0.05' $IN_PATH -o $OUT_PATH
+if [[ "$SNP_FILTER" != "none" ]]; then
+  echo "Applying SNP filter: $SNP_FILTER"
+  bcftools view -i "$SNP_FILTER" $IN_PATH -o $OUT_PATH
+else
+  echo "No SNP filter applied, copying input to output."
+  cp $IN_PATH $OUT_PATH
+fi
+
 
 echo "Counting variants..."
 bcftools +counts $OUT_PATH

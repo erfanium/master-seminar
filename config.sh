@@ -1,0 +1,27 @@
+# Configuration file for the pipeline
+
+export MISSING_TO_REF=true
+
+export SNP_FILTER='AF<0.10 && AF>0'
+# export SNP_FILTER='MAF<0.10 && MAF>0'
+# export SNP_FILTER='MAF>(1/150)'
+
+
+export PCA_COUNT=8
+
+
+# The minimum number of points required for a group of points to be considered a cluster.
+export HDB_MIN_SAMPLES=2
+
+
+# The number of points in a neighborhood around a point required for it to be considered a core point. Essentially controls how conservative the algorithm is about identifying dense regions.
+export HDB_MIN_CLUSTER_SIZE=3
+
+
+export CLUSTER_LIMIT_PCA=4
+
+# skip topk calculation for variants of each cluster
+export SKIP_CLUSTER_TOPK_VARIANT_CALCULATION=false
+
+
+# export SNP_FILTER='none'

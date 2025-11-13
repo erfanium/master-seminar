@@ -11,4 +11,4 @@ OUT_PATH=$BASE_PATH/10_kinship/out
 # ensure output directory exists
 mkdir -p $(dirname $OUT_PATH)
 
-plink --vcf $IN_PATH --distance ibs flat-missing square --out $OUT_PATH
+plink --vcf $IN_PATH --distance ibs flat-missing square --out $OUT_PATH > $OUT_PATH.log

@@ -13,11 +13,7 @@ def process_vcf(vcf_path):
             {
                 "CHROM": variant.CHROM,
                 "POS": variant.POS,
-                "ID": variant.ID,
-                "F_MISSING": variant.INFO.get("F_MISSING"),
                 "MAF": variant.INFO.get("MAF"),
-                "AC_Het": variant.INFO.get("AC_Het"),
-                "HWE": variant.INFO.get("HWE"),
             }
         )
     df = pd.DataFrame(data)

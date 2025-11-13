@@ -30,10 +30,25 @@ def process_vcf(vcf_path, output_prefix):
     # Collect INFO fields
     data = []
     for variant in vcf:
+        AC = variant.INFO.get("AC")
+
+        # use avg is AC is tuple (multi-allelic)
+        if isinstance(AC, (list, tuple)):
+            AC = sum(AC) / len(AC)
+
+        AN = variant.INFO.get("AN")
+        if AN and AC:
+            ac_to_an = AC / AN
+        else:
+            ac_to_an = None
+
         data.append(
             {
                 "F_MISSING": variant.INFO.get("F_MISSING"),
                 "MAF": variant.INFO.get("MAF"),
+                "AC": AC,
+                "AN": AN,
+                "AC/AN": ac_to_an,
                 "AC_Het": variant.INFO.get("AC_Het"),
                 "HWE": variant.INFO.get("HWE"),
             }
@@ -48,14 +63,33 @@ def process_vcf(vcf_path, output_prefix):
 
     # Plot distributions
     sns.set(style="whitegrid")
-    fields = ["F_MISSING", "MAF", "AC_Het", "HWE"]
-    plt.figure(figsize=(16, 4))
-    for i, field in enumerate(fields, 1):
-        plt.subplot(1, 4, i)
+    fields = ["F_MISSING", "MAF", "AC", "AN", "AC_Het", "AC/AN", "HWE"]
+    descriptions = [
+        "Fraction of missing genotypes per variant",
+        "Minor allele frequency",
+        "Allele count",
+        "Allele number",
+        "Heterozygous allele count",
+        "Allele count / Allele number ratio",
+        "Hardy-Weinberg Equilibrium p-value",
+    ]
+
+    plt.figure(figsize=(26, 4))
+    for i, (field, desc) in enumerate(zip(fields, descriptions), 1):
+        plt.subplot(1, 7, i)
         sns.histplot(df[field].dropna(), kde=True, bins=20)
         plt.title(f"{field} Distribution")
         plt.xlabel(field)
         plt.ylabel("Frequency")
+        plt.text(
+            0.5,
+            -0.3,  # x, y in axis coordinates
+            desc,
+            ha="center",
+            va="center",
+            transform=plt.gca().transAxes,
+            fontsize=9,
+        )
     plt.tight_layout()
     plt.savefig(f"{output_dir}/{output_prefix}_distribution.png")
 
