@@ -9,16 +9,17 @@ var_file = sys.argv[1]
 
 
 # Read the var file
-df = pd.read_csv(var_file, delim_whitespace=True)
+df = pd.read_csv(var_file, sep="\\s+")
+
+pca_columns = [col for col in df.columns if col.startswith("PC")]
 
 
-# Get top 10 SNPs for PC{1,2,3}
-for pc in ["PC1", "PC2", "PC3"]:
+for pc in pca_columns:
     abs_col = f"ABS_{pc}"
     df[abs_col] = df[pc].abs()
 
-    top_snps = df.sort_values(abs_col, ascending=False).head(10)
-    print(f"\nTop 10 SNPs for {pc}:")
+    top_snps = df.sort_values(abs_col, ascending=False).head(100)
+    print(f"\nTop 100 SNPs for {pc}:")
     for _, row in top_snps.iterrows():
         # print(row)
         print(f"{row['VAR']} (Loading: {row[pc]})")

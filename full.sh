@@ -9,7 +9,7 @@ if [ -z "$BASE_PATH" ]; then
     exit 1
 fi
 
-bash ./clean.sh $BASE_PATH
+python ./clean.py $BASE_PATH
 
 echo "Step 1: Merging VCF fees"
 bash ./01_merge.sh $BASE_PATH
@@ -29,5 +29,8 @@ bash ./21_mds.sh $BASE_PATH
 echo "Step 7: Clustering results"
 python ./30_cluster.py $BASE_PATH
 
-echo "Step 8: Plotting results"
-python ./40_plot.py $BASE_PATH
+echo "Step 7: Profile each cluster"
+python ./31_cluster_profile.py $BASE_PATH
+
+# echo "Step 8: Plotting results"
+# python ./40_plot.py $BASE_PATH

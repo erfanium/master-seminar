@@ -9,10 +9,6 @@ import sys
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import HDBSCAN  # use the sklearn implementation
 import plotly.express as px
-import json
-
-from core.cluster import get_top_variants_in_cluster, open_db
-
 
 # Argument parsing
 if len(sys.argv) < 2:
@@ -42,7 +38,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # Load PCA data
 print(f"[INFO] Loading PCA data from: {pca_input}")
-df_pca = pd.read_csv(pca_input, delim_whitespace=True, header=0)
+df_pca = pd.read_csv(pca_input, sep="\\s+", header=0)
 pca_columns = [col for col in df_pca.columns if col.startswith("PC")]
 
 
@@ -176,29 +172,6 @@ if "PC3" in df_pca.columns:
 
     print(f"[INFO] Interactive 3D PCA plot saved to: {interactive_plot_path}")
 
-# Save cluster memberships as JSON
-conn = open_db(BASE_PATH)
-
-cluster_memberships = {}
-for cid in sorted(df_pca["Cluster"].unique(), key=lambda x: (x == "C-1", x)):
-    members = df_pca.loc[df_pca["Cluster"] == cid, "FID"].tolist()
-    print(f"cluster membership calculation for cluster: {cid}")
-    cluster_memberships[cid] = {
-        "samples": members,
-        "top_variants": (
-            get_top_variants_in_cluster(conn, members)
-            if CLUSTER_TOPK_VARIANT_CALCULATION
-            else None
-        ),
-    }
-
-conn.close()
-
-json_output_path = os.path.join(output_dir, "cluster_memberships.json")
-with open(json_output_path, "w") as f:
-    json.dump(cluster_memberships, f, indent=4)
-
-print(f"[INFO] Cluster memberships saved to JSON: {json_output_path}")
 
 # Save full PCA data with cluster labels
 cluster_output = os.path.join(output_dir, "pca_hdbscan_clusters.tsv")
