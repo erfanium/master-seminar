@@ -26,7 +26,7 @@ class ClusterProfiler:
         in_cluster_avg = in_cluster["sum"] / in_cluster["count"]
         out_cluster_avg = out_cluster["sum"] / out_cluster["count"]
 
-        score = in_cluster_avg - out_cluster_avg
+        score = abs(in_cluster_avg - out_cluster_avg)
 
         # Prepare record
         entry = {

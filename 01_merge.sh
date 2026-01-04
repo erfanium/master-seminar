@@ -1,3 +1,5 @@
+set -e
+
 BASE_PATH=$1
 MISSING_TO_REF=${MISSING_TO_REF:-true}
 

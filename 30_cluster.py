@@ -49,15 +49,14 @@ if CLUSTER_LIMIT_PCA:
     X = X[pca_columns[:CLUSTER_LIMIT_PCA]]
 
 eigenvalues = np.loadtxt(eigenval_input)
+eigenvalues = eigenvalues[:CLUSTER_LIMIT_PCA]
+
+
 cumulative = np.cumsum(eigenvalues / np.sum(eigenvalues))
 
 
-# Weight each PC by its eigenvalue
-for i, col in enumerate(X.columns):
-    X[col] *= eigenvalues[i]
-
-# Normalize
-# X_scaled = StandardScaler().fit_transform(X)
+X_scaled = StandardScaler().fit_transform(X)
+X_scaled = X_scaled * eigenvalues
 
 # Fit HDBSCAN
 clusterer = HDBSCAN(
@@ -66,12 +65,35 @@ clusterer = HDBSCAN(
     metric="euclidean",  # you can change metric if needed
     algorithm="auto",
 )
-labels = clusterer.fit_predict(X)
+labels = clusterer.fit_predict(X_scaled)
 df_pca["Cluster"] = labels
 df_pca["Cluster"] = df_pca["Cluster"].apply(lambda x: f"C{x}" if x != -1 else "Outlier")
 
-n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-print(f"[INFO] HDBSCAN found {n_clusters} clusters (+ noise if -1 present)")
+n_outliers = len(df_pca[df_pca["Cluster"] == "Outlier"])
+n_clusters = df_pca["Cluster"].nunique() - (1 if n_outliers > 0 else 0)
+
+print(f"[INFO] HDBSCAN found {n_clusters} clusters and {n_outliers} outliers.")
+
+# ----- Cluster Summary -----
+print("\n[INFO] Cluster Summary")
+clusters = df_pca["Cluster"].unique()
+
+for cluster in clusters:
+    cluster_df = df_pca[df_pca["Cluster"] == cluster]
+    count = len(cluster_df)
+
+    # extract sample names (adjust column name if needed)
+    if "IID" in cluster_df.columns:
+        sample_names = cluster_df["IID"].tolist()
+    else:
+        # fallback to index
+        sample_names = cluster_df.index.tolist()
+
+    first_20 = sample_names[:20]
+
+    print(f"\nCluster: {cluster}")
+    print(f"  Size: {count}")
+    print(f"  First 20 samples: {first_20}")
 
 
 # 2D Plot
@@ -124,6 +146,7 @@ if "PC3" in df_pca.columns:
     plt.savefig(os.path.join(output_dir, "pca_hdbscan_3d.png"), dpi=300)
     plt.close()
 
+
 # Interactive 3D plot with Plotly
 if "PC3" in df_pca.columns:
     unique_clusters = df_pca["Cluster"].unique()
@@ -141,36 +164,45 @@ if "PC3" in df_pca.columns:
         "#3b3b3b",
     ]
 
-    # Generate random colors per cluster
-    color_map = {}
-
+    # Generate color map for clusters
     color_map = {}
     for i, cluster in enumerate(unique_clusters):
         if cluster == "Outlier":
-            color_map[cluster] = "#808080"  # Light gray for noise
+            color_map[cluster] = "#808080"
         else:
             color_map[cluster] = colors[i % len(colors)]
 
-    print(color_map)
-    fig = px.scatter_3d(
-        df_pca,
-        x="PC1",
-        y="PC2",
-        z="PC3",
-        color="Cluster",
-        hover_name="FID",
-        title=f"PCA 3D Interactive Plot (Random Colors, HDBSCAN, n={n_clusters})",
-        opacity=0.7,
-        color_discrete_map=color_map,
-    )
+    # Determine number of PCs available
+    num_pcs = len([col for col in df_pca.columns if col.startswith("PC")])
 
-    fig.update_traces(marker=dict(size=4))
-    fig.update_layout(legend_title_text="Cluster ID")
+    # Sliding window of 3 PCs (PC1-3, PC2-4, ..., PC(n-2)-PCn)
+    for start_pc in range(1, num_pcs - 2 + 1):  # up to PC8 if PC10 exists
+        pc_x = f"PC{start_pc}"
+        pc_y = f"PC{start_pc + 1}"
+        pc_z = f"PC{start_pc + 2}"
 
-    interactive_plot_path = os.path.join(output_dir, "pca_hdbscan_3d_interactive.html")
-    fig.write_html(interactive_plot_path)
+        fig = px.scatter_3d(
+            df_pca,
+            x=pc_x,
+            y=pc_y,
+            z=pc_z,
+            color="Cluster",
+            hover_name="FID",
+            title=f"PCA 3D Interactive Plot ({pc_x}, {pc_y}, {pc_z})",
+            opacity=0.7,
+            color_discrete_map=color_map,
+        )
 
-    print(f"[INFO] Interactive 3D PCA plot saved to: {interactive_plot_path}")
+        fig.update_traces(marker=dict(size=4))
+        fig.update_layout(legend_title_text="Cluster ID")
+
+        # Save each plot with PC range in the filename
+        plot_filename = f"pca_hdbscan_3d_{start_pc}.html"
+        interactive_plot_path = os.path.join(output_dir, plot_filename)
+
+        fig.write_html(interactive_plot_path)
+
+        print(f"[INFO] Saved: {interactive_plot_path}")
 
 
 # Save full PCA data with cluster labels

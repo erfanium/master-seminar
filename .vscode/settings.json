@@ -1,5 +1,11 @@
 {
-  "cSpell.words": ["cyvcf"],
+  "cSpell.words": ["cyvcf", "Zahedan"],
   "editor.formatOnSave": true,
-  "editor.tabSize": 4
+  "editor.tabSize": 4,
+  "favorites.resources": [
+    {
+      "filePath": "",
+      "group": "Default"
+    }
+  ]
 }

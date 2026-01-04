@@ -14,4 +14,4 @@ mkdir -p $(dirname $OUT_PATH)
 
 plink --vcf $IN_PATH --cluster --pca $PCA_COUNT var-wts header --out $OUT_PATH > $OUT_PATH.log
 
-python3 tools/var-wts-topk.py $OUT_PATH.eigenvec.var > $OUT_PATH.eigenvec.var.top10
+python3 tools/var-wts-topk.py $OUT_PATH.eigenvec.var > $OUT_PATH.eigenvec.var.topk.json

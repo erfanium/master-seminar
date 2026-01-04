@@ -12,7 +12,7 @@ fi
 python ./clean.py $BASE_PATH
 
 echo "Step 1: Merging VCF fees"
-bash ./01_merge.sh $BASE_PATH
+python ./01_merge.py $BASE_PATH
 
 
 echo "Step 2: Applying filters"

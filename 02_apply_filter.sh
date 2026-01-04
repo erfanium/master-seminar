@@ -15,11 +15,10 @@ mkdir -p $(dirname $OUT_PATH)
 if [[ "$SNP_FILTER" != "none" ]]; then
   echo "Applying SNP filter: $SNP_FILTER"
   bcftools view -i "$SNP_FILTER" $IN_PATH -o $OUT_PATH
+
+  echo "Counting variants..."
+  bcftools +counts $OUT_PATH
 else
-  echo "No SNP filter applied, copying input to output."
-  cp $IN_PATH $OUT_PATH
+    echo "No SNP filter applied, creating symlink to input instead of copying."
+    ln -s "$IN_PATH" "$OUT_PATH"
 fi
-
-
-echo "Counting variants..."
-bcftools +counts $OUT_PATH
