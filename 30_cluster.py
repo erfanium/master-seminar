@@ -202,15 +202,15 @@ if "PC3" in df_pca.columns:
 
         fig.write_html(interactive_plot_path)
 
-        print(f"[INFO] Saved: {interactive_plot_path}")
+        # print(f"[INFO] Saved: {interactive_plot_path}")
 
 
 # Save full PCA data with cluster labels
 cluster_output = os.path.join(output_dir, "pca_hdbscan_clusters.tsv")
 df_pca.to_csv(cluster_output, sep="\t", index=False)
-print(f"[INFO] Clustered PCA data saved to: {cluster_output}")
+# print(f"[INFO] Clustered PCA data saved to: {cluster_output}")
 
 # Save plink compatible clusters result (FID, IID, Cluster)
 cluster_output = os.path.join(output_dir, "pca_hdbscan_clusters_plink.tsv")
 df_pca[["FID", "IID", "Cluster"]].to_csv(cluster_output, sep="\t", index=False)
-print(f"[INFO] Clustered PCA data saved to: {cluster_output}")
+# print(f"[INFO] Clustered PCA data saved to: {cluster_output}")
