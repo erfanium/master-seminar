@@ -5,8 +5,6 @@ import sys
 import subprocess
 from pathlib import Path
 
-from tools.var_wts_topk import write_topk_json
-
 
 def run(cmd, log_file=None):
     if log_file:

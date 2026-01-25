@@ -13,8 +13,6 @@ PYTHON_EXE = sys.executable
 
 
 class Logger:
-    """Handles formatted console output."""
-
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     RESET = "\033[0m"
@@ -29,50 +27,55 @@ class Logger:
 
 
 def run_script(script_name, base_path):
-    """Executes a python script with the provided base_path."""
-    # The requirement: run command should not receive python as an arg manually
     subprocess.run([PYTHON_EXE, script_name, base_path], check=True)
+
+
+# --- Pipeline Definition ---
+
+PIPELINE = [
+    (99, "Cleaning workspace", "./99_clean.py"),
+    (1, "Merging VCF files", "./01_merge.py"),
+    (2, "Applying filters", "./02_apply_filter.py"),
+    (10, "Calculating kinship", "./10_kinship.py"),
+    (20, "Performing PCA", "./20_pca.py"),
+    (21, "Performing MDS", "./21_mds.py"),
+    (30, "Clustering results", "./30_cluster.py"),
+    (31, "Profile each cluster", "./31_cluster_profile.py"),
+]
 
 
 # --- Main Logic ---
 
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <base_path>")
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} <base_path> [step]")
         sys.exit(1)
 
     base_path = sys.argv[1]
+    requested_step = int(sys.argv[2]) if len(sys.argv) == 3 else None
 
-    # Pipeline Execution
-    run_script("./99_clean.py", base_path)
+    valid_steps = {step for step, _, _ in PIPELINE}
+    if requested_step is not None and requested_step not in valid_steps:
+        print(f"Invalid step {requested_step}. Valid steps: {sorted(valid_steps)}")
+        sys.exit(1)
 
-    Logger.step("Merging VCF files")
-    run_script("./01_merge.py", base_path)
+    for step_id, description, script in PIPELINE:
 
-    Logger.step("Applying filters")
-    run_script("./02_apply_filter.py", base_path)
+        if requested_step is not None and step_id != requested_step:
+            continue
 
-    Logger.step("Calculating kinship")
-    run_script("./10_kinship.py", base_path)
+        Logger.step(description)
 
-    Logger.step("Performing PCA")
-    run_script("./20_pca.py", base_path)
+        if step_id == 21 and SKIP_MDS:
+            Logger.skip("MDS")
+            continue
 
-    Logger.step("Performing MDS")
-    if SKIP_MDS:
-        Logger.skip("MDS")
-    else:
-        run_script("./21_mds.py", base_path)
+        if step_id == 31 and SKIP_PROFILE:
+            Logger.skip("Cluster profiling")
+            continue
 
-    Logger.step("Clustering results")
-    run_script("./30_cluster.py", base_path)
-
-    Logger.step("Profile each cluster")
-    if SKIP_PROFILE:
-        Logger.skip("Cluster profiling")
-    else:
-        run_script("./31_cluster_profile.py", base_path)
+        run_script(script, base_path)
 
 
 if __name__ == "__main__":
