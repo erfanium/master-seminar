@@ -11,7 +11,7 @@ BASE_PATH = sys.argv[1]
 
 
 # File paths
-IN_PATH = f"{BASE_PATH}/02_filtered/data.vcf"
+IN_PATH = f"{BASE_PATH}/03_filtered/data.vcf"
 
 OUT_DIR = f"{BASE_PATH}/04_sqlite"
 os.makedirs(OUT_DIR, exist_ok=True)

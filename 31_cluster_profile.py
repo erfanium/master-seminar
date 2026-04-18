@@ -12,14 +12,14 @@ if len(sys.argv) < 2:
 BASE_PATH = sys.argv[1]
 
 # File paths
-vcf_path = f"{BASE_PATH}/01_merged/data.vcf"
-cluster_path = f"{BASE_PATH}/30_cluster/pca_hdbscan_clusters_plink.tsv"
+vcf_path = f"{BASE_PATH}/03_filtered/data.vcf.gz"
+cluster_path = f"{BASE_PATH}/30_cluster/pca_clusters_plink.tsv"
 cluster_profile_dir = f"{BASE_PATH}/31_cluster_profile"
 
 os.makedirs(cluster_profile_dir, exist_ok=True)
 
 # Load cluster assignment table
-clusters = pd.read_csv(cluster_path, sep="\t")
+clusters = pd.read_csv(cluster_path, sep="\t", dtype=str)
 
 # Separate out outliers
 outlier_samples = clusters.loc[clusters["Cluster"] == "Outlier", "IID"].tolist()
@@ -34,6 +34,8 @@ vcf = VCF(vcf_path)
 sample_names = list(vcf.samples)
 sample_name_to_index = {s: i for i, s in enumerate(sample_names)}
 index_to_sample_name = {v: k for k, v in sample_name_to_index.items()}
+
+print(f"Sample names", sample_names)
 
 # Create ClusterProfiler objects for each cluster
 profilers = {}
@@ -94,9 +96,10 @@ for name, profiler in profilers.items():
                 "pos": pos,
                 "ref": ref,
                 "alt": alt,
-                "in_cluster_avg": entry["in_cluster_avg"],
-                "out_cluster_avg": entry["out_cluster_avg"],
-                "score": entry["score"],
+                "af": entry["af"],
+                "in_cluster_af": entry["in_cluster_af"],
+                "out_cluster_af": entry["out_cluster_af"],
+                "af_diff": entry["af_diff"],
             }
         )
     results["clusters"][name] = cluster_data
@@ -119,9 +122,10 @@ for name, profiler in outlier_profilers.items():
                 "pos": pos,
                 "ref": ref,
                 "alt": alt,
-                "in_cluster_avg": entry["in_cluster_avg"],
-                "out_cluster_avg": entry["out_cluster_avg"],
-                "score": entry["score"],
+                "af": entry["af"],
+                "in_cluster_af": entry["in_cluster_af"],
+                "out_cluster_af": entry["out_cluster_af"],
+                "af_diff": entry["af_diff"],
             }
         )
     results["outliers"][name] = outlier_data

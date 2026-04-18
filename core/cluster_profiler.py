@@ -23,22 +23,27 @@ class ClusterProfiler:
         if in_cluster["count"] == 0 or out_cluster["count"] == 0:
             return
 
-        in_cluster_avg = in_cluster["sum"] / in_cluster["count"]
-        out_cluster_avg = out_cluster["sum"] / out_cluster["count"]
+        in_cluster_af = (in_cluster["sum"] / in_cluster["count"]) / 2
+        out_cluster_af = (out_cluster["sum"] / out_cluster["count"]) / 2
+        af = (
+            (in_cluster["sum"] + out_cluster["sum"])
+            / (in_cluster["count"] + out_cluster["count"])
+        ) / 2
 
-        score = abs(in_cluster_avg - out_cluster_avg)
+        af_diff = abs(in_cluster_af - out_cluster_af)
 
         # Prepare record
         entry = {
             "variant": variant,
-            "in_cluster_avg": in_cluster_avg,
-            "out_cluster_avg": out_cluster_avg,
-            "score": score,
+            "af": af,
+            "in_cluster_af": in_cluster_af,
+            "out_cluster_af": out_cluster_af,
+            "af_diff": af_diff,
         }
 
-        # Increment counter to avoid dict comparison if scores tie
+        # Increment counter to avoid dict comparison if af_diffs tie
         self._counter += 1
-        key = (score, self._counter, entry)
+        key = (af_diff, self._counter, entry)
 
         # Maintain top-k heap
         if len(self.topk) < self.k:

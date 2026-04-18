@@ -34,13 +34,15 @@ def run_script(script_name, base_path):
 
 PIPELINE = [
     (99, "Cleaning workspace", "./99_clean.py"),
-    (1, "Merging VCF files", "./01_merge.py"),
-    (2, "Applying filters", "./02_apply_filter.py"),
+    (0, "Index VCF files", "./00_index.py"),
+    (2, "Merging VCF files", "./02_merge.py"),
+    (3, "Post-merge filtering", "./03_post_filter.py"),
     (10, "Calculating kinship", "./10_kinship.py"),
     (20, "Performing PCA", "./20_pca.py"),
-    (21, "Performing MDS", "./21_mds.py"),
+    # (21, "Performing MDS", "./21_mds.py"),
     (30, "Clustering results", "./30_cluster.py"),
     (31, "Profile each cluster", "./31_cluster_profile.py"),
+    # (40, "Plot kinship", "./40_plot_kinship.py"),
 ]
 
 

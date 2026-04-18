@@ -23,10 +23,10 @@ def main():
     base_path = Path(sys.argv[1])
     missing_to_ref = os.environ.get("MISSING_TO_REF", "true").lower() == "true"
 
-    in_path = base_path / "00_raw_vcf"
-    out_path = base_path / "01_merged" / "data.vcf"
+    in_path = base_path / "01_indexed"
+    out_path = base_path / "02_merged" / "data.vcf.gz"
 
-    vcfs = sorted(in_path.glob("*.vcf"))
+    vcfs = sorted(in_path.glob("*.vcf.gz"))
     if not vcfs:
         print(f"No VCFs found in {in_path}")
         sys.exit(1)
@@ -43,7 +43,6 @@ def main():
             "bcftools",
             "merge",
             "--force-single",
-            "--force-no-index",
             *flags,
             *map(str, vcfs),
         ],
@@ -51,11 +50,19 @@ def main():
     )
 
     p2 = subprocess.Popen(
-        ["bcftools", "norm", "-m", "-any", "-"], stdin=p1.stdout, stdout=subprocess.PIPE
+        ["bcftools", "norm", "-m", "-any", "-"],
+        stdin=p1.stdout,
+        stdout=subprocess.PIPE,
     )
 
     p3 = subprocess.Popen(
-        ["bcftools", "annotate", "--set-id", "%CHROM-%POS-%REF-%ALT"],
+        [
+            "bcftools",
+            "annotate",
+            "--set-id",
+            "%CHROM-%POS-%REF-%ALT",
+            "-",
+        ],
         stdin=p2.stdout,
         stdout=subprocess.PIPE,
     )
@@ -64,6 +71,7 @@ def main():
         [
             "bcftools",
             "+fill-tags",
+            "-Oz",  # compressed VCF output
             "-o",
             str(out_path),
             "--",
@@ -76,6 +84,9 @@ def main():
     for p in (p1, p2, p3, p4):
         if p.wait() != 0:
             sys.exit(1)
+
+    print("Indexing compressed VCF...")
+    run(["bcftools", "index", "-t", str(out_path)])  # creates .tbi
 
     print("Counting variants...")
     run(["bcftools", "+counts", str(out_path)])

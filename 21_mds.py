@@ -22,7 +22,7 @@ def main():
     base_path = Path(sys.argv[1])
     pca_count = int(os.environ.get("PCA_COUNT", 10))
 
-    in_path = base_path / "02_filtered" / "data.vcf"
+    in_path = base_path / "03_filtered" / "data.vcf"
     out_path = base_path / "21_mds" / "out"
 
     # ensure output directory exists

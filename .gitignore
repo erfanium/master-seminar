@@ -3,3 +3,5 @@ data-*
 .venv
 tmp
 .vscode
+report
+core/__pycache__

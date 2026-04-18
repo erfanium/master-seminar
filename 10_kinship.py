@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 
+
 def main():
     if len(sys.argv) < 2:
         print(f"Usage: {sys.argv[0]} <base_path>")
@@ -11,7 +12,7 @@ def main():
 
     base_path = sys.argv[1]
 
-    in_path = os.path.join(base_path, "02_filtered", "data.vcf")
+    in_path = os.path.join(base_path, "03_filtered", "data.vcf.gz")
     out_path = os.path.join(base_path, "10_kinship", "out")
 
     # ensure output directory exists
@@ -23,14 +24,20 @@ def main():
         subprocess.run(
             [
                 "plink",
-                "--vcf", in_path,
-                "--distance", "ibs", "flat-missing", "square",
-                "--out", out_path
+                "--vcf",
+                in_path,
+                "--distance",
+                "ibs",
+                "flat-missing",
+                "square",
+                "--out",
+                out_path,
             ],
             stdout=log_file,
             stderr=subprocess.STDOUT,
-            check=True
+            check=True,
         )
+
 
 if __name__ == "__main__":
     main()

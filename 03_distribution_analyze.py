@@ -15,8 +15,8 @@ BASE_PATH = sys.argv[1]
 # BASE_PATH = "data"
 
 # File paths
-before_filter = f"{BASE_PATH}/01_merged"
-after_filter = f"{BASE_PATH}/02_filtered"
+before_filter = f"{BASE_PATH}/02_merged"
+after_filter = f"{BASE_PATH}/03_filtered"
 output_dir = f"{BASE_PATH}/03_distribution_analyze"
 
 os.makedirs(output_dir, exist_ok=True)

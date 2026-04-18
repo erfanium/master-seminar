@@ -11,12 +11,15 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score, silhouette_samples
 import plotly.express as px
 
+positive_wes_set = []
+
 try:
     from sklearn.cluster import HDBSCAN
 
     HAS_HDBSCAN = True
 except ImportError:
     HAS_HDBSCAN = False
+
 
 # ---------------------------
 # Argument parsing
@@ -159,6 +162,7 @@ print(
 print("\n[INFO] Cluster Summary")
 clusters = df_pca["Cluster"].unique()
 
+
 for cluster in clusters:
     cluster_df = df_pca[df_pca["Cluster"] == cluster]
     count = len(cluster_df)
@@ -168,9 +172,15 @@ for cluster in clusters:
     else:
         sample_names = cluster_df.index.tolist()
 
+    # annotate with (POS) if in positive_wes
+    annotated_names = [
+        f"{name} (POS)" if str(name) in positive_wes_set else name
+        for name in sample_names
+    ]
+
     print(f"\nCluster: {cluster}")
     print(f"  Size: {count}")
-    print(f"  First 20 samples: {sample_names[:20]}")
+    print(f"  First 20 samples: {annotated_names[:20]}")
 
 # ---------------------------
 # 2D plot
@@ -205,32 +215,32 @@ plt.close()
 # ---------------------------
 # 3D plot
 # ---------------------------
-if "PC3" in df_pca.columns:
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection="3d")
+# if "PC3" in df_pca.columns:
+#     fig = plt.figure(figsize=(10, 8))
+#     ax = fig.add_subplot(111, projection="3d")
 
-    for label, color in zip(unique_labels, colors):
-        mask_plot = labels == label
-        name = f"C{label}" if label != -1 else "Outlier"
+#     for label, color in zip(unique_labels, colors):
+#         mask_plot = labels == label
+#         name = f"C{label}" if label != -1 else "Outlier"
 
-        ax.scatter(
-            df_pca.loc[mask_plot, "PC1"],
-            df_pca.loc[mask_plot, "PC2"],
-            df_pca.loc[mask_plot, "PC3"],
-            c=[color],
-            label=name,
-            alpha=0.7,
-            s=30,
-        )
+#         ax.scatter(
+#             df_pca.loc[mask_plot, "PC1"],
+#             df_pca.loc[mask_plot, "PC2"],
+#             df_pca.loc[mask_plot, "PC3"],
+#             c=[color],
+#             label=name,
+#             alpha=0.7,
+#             s=30,
+#         )
 
-    ax.set_xlabel("PC1")
-    ax.set_ylabel("PC2")
-    ax.set_zlabel("PC3")
-    ax.set_title(f"PCA 3D Plot (Weighted PCs, {CLUSTER_ALGO.upper()}, n={n_clusters})")
-    ax.legend(fontsize=8)
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "pca_cluster_3d.png"), dpi=300)
-    plt.close()
+#     ax.set_xlabel("PC1")
+#     ax.set_ylabel("PC2")
+#     ax.set_zlabel("PC3")
+#     ax.set_title(f"PCA 3D Plot (Weighted PCs, {CLUSTER_ALGO.upper()}, n={n_clusters})")
+#     ax.legend(fontsize=8)
+#     plt.tight_layout()
+#     plt.savefig(os.path.join(output_dir, "pca_cluster_3d.png"), dpi=300)
+#     plt.close()
 
 # ---------------------------
 # Interactive 3D plot
@@ -265,13 +275,26 @@ if "PC3" in df_pca.columns:
         pc_y = f"PC{start_pc + 1}"
         pc_z = f"PC{start_pc + 2}"
 
+        # create hover text with POS annotation
+        df_pca["hover_text"] = (
+            df_pca["FID"]
+            .astype(str)
+            .apply(lambda x: f"{x} (POS)" if str(x) in positive_wes_set else x)
+        )
+
+        # define marker shape per sample
+        df_pca["marker_symbol"] = df_pca["IID"].apply(
+            lambda x: "triangle-up" if str(x) in positive_wes_set else "circle"
+        )
+
         fig = px.scatter_3d(
             df_pca,
             x=pc_x,
             y=pc_y,
             z=pc_z,
             color="Cluster",
-            hover_name="FID",
+            symbol="marker_symbol",
+            hover_name="hover_text",  # show POS in hover
             title=f"PCA 3D Interactive Plot ({pc_x}, {pc_y}, {pc_z})",
             opacity=0.7,
             color_discrete_map=color_map,
