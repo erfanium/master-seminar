@@ -6,7 +6,7 @@ import os
 # List of subdirectories to remove
 dirs_to_remove = [
     "01_indexed",
-    "01_merged",
+    "02_merged",
     "03_filtered",
     "03_distribution_analyze",
     "10_kinship",

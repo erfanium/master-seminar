@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+"""
+Pipeline orchestrator for VCF analysis.
+
+Usage:
+  python main.py <base_path>                  Run full pipeline
+  python main.py <base_path> <step_or_verb>   Run a single step (number or verb)
+
+Verbs: clean, index, merge, kinship, pca, mds, cluster, profile, plot-kinship
+"""
+
 import os
 import sys
 import subprocess
@@ -31,53 +41,102 @@ def run_script(script_name, base_path):
 
 
 # --- Pipeline Definition ---
+# Each entry: (step_id, description, script_path, verb_name)
 
 PIPELINE = [
-    (99, "Cleaning workspace", "./99_clean.py"),
-    (0, "Index VCF files", "./00_index.py"),
-    (2, "Merging VCF files", "./02_merge.py"),
-    (3, "Post-merge filtering", "./03_post_filter.py"),
-    (10, "Calculating kinship", "./10_kinship.py"),
-    (20, "Performing PCA", "./20_pca.py"),
-    # (21, "Performing MDS", "./21_mds.py"),
-    (30, "Clustering results", "./30_cluster.py"),
-    (31, "Profile each cluster", "./31_cluster_profile.py"),
-    # (40, "Plot kinship", "./40_plot_kinship.py"),
+    (99, "Cleaning workspace", "./99_clean.py", "clean"),
+    (0, "Index VCF files", "./00_index.py", "index"),
+    (2, "Merging VCF files", "./02_merge.py", "merge"),
+    # (10, "Calculating kinship",  "./10_kinship.py",        "kinship"),
+    (20, "Performing PCA", "./20_pca.py", "pca"),
+    # (21, "Performing MDS",       "./21_mds.py",            "mds"),
+    (30, "Clustering results", "./30_cluster.py", "cluster"),
+    (31, "Profile each cluster", "./31_cluster_profile.py", "profile"),
+    # (40, "Plot kinship",         "./40_plot_kinship.py",   "plot-kinship"),
 ]
 
+# Build lookup maps
+STEP_MAP = {step_id: (desc, script, verb) for step_id, desc, script, verb in PIPELINE}
+VERB_MAP = {verb: (step_id, desc, script) for step_id, desc, script, verb in PIPELINE}
 
-# --- Main Logic ---
+
+# --- CLI Commands ---
+
+
+def usage():
+    print("Usage:")
+    print(f"  {sys.argv[0]} <base_path>                  Run full pipeline")
+    print(
+        f"  {sys.argv[0]} <base_path> <step_or_verb>   Run a single step (numeric or verb)"
+    )
+    print()
+    print("Available verbs:", ", ".join(sorted(VERB_MAP.keys())))
+    print("Available steps:", ", ".join(str(s) for s in sorted(STEP_MAP.keys())))
+    sys.exit(1)
+
+
+def run_step(step_id, base_path):
+    """Execute a single pipeline step by its numeric ID."""
+    desc, script, _verb = STEP_MAP[step_id]
+    Logger.step(desc)
+
+    if step_id == 21 and SKIP_MDS:
+        Logger.skip("MDS")
+        return
+    if step_id == 31 and SKIP_PROFILE:
+        Logger.skip("Cluster profiling")
+        return
+
+    run_script(script, base_path)
+
+
+def cmd_full_pipeline(base_path):
+    """Run the entire pipeline in order."""
+    for step_id, _desc, _script, _verb in PIPELINE:
+        run_step(step_id, base_path)
+
+
+def cmd_verb(base_path, verb):
+    """Run a single pipeline step by verb name."""
+    if verb not in VERB_MAP:
+        print(f"Unknown verb: {verb}")
+        print("Available verbs:", ", ".join(sorted(VERB_MAP.keys())))
+        sys.exit(1)
+    step_id, _desc, _script = VERB_MAP[verb]
+    run_step(step_id, base_path)
+
+
+# --- Main Entry Point ---
 
 
 def main():
-    if len(sys.argv) not in (2, 3):
-        print(f"Usage: {sys.argv[0]} <base_path> [step]")
-        sys.exit(1)
+    args = sys.argv[1:]
 
-    base_path = sys.argv[1]
-    requested_step = int(sys.argv[2]) if len(sys.argv) == 3 else None
+    if not args:
+        usage()
 
-    valid_steps = {step for step, _, _ in PIPELINE}
-    if requested_step is not None and requested_step not in valid_steps:
-        print(f"Invalid step {requested_step}. Valid steps: {sorted(valid_steps)}")
-        sys.exit(1)
+    base_path = args[0]
 
-    for step_id, description, script in PIPELINE:
+    if len(args) == 1:
+        # python main.py <base_path>
+        cmd_full_pipeline(base_path)
 
-        if requested_step is not None and step_id != requested_step:
-            continue
+    elif len(args) == 2:
+        # python main.py <base_path> <step_or_verb>
+        arg = args[1]
+        # Try numeric step first
+        try:
+            step_id = int(arg)
+            if step_id not in STEP_MAP:
+                print(f"Invalid step {step_id}. Valid steps: {sorted(STEP_MAP.keys())}")
+                sys.exit(1)
+            run_step(step_id, base_path)
+        except ValueError:
+            # Not a number — treat as verb
+            cmd_verb(base_path, arg)
 
-        Logger.step(description)
-
-        if step_id == 21 and SKIP_MDS:
-            Logger.skip("MDS")
-            continue
-
-        if step_id == 31 and SKIP_PROFILE:
-            Logger.skip("Cluster profiling")
-            continue
-
-        run_script(script, base_path)
+    else:
+        usage()
 
 
 if __name__ == "__main__":

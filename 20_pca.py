@@ -4,7 +4,6 @@ import os
 import sys
 import subprocess
 from pathlib import Path
-from pathlib import Path
 from core.var_wts_topk import write_topk_json
 
 
@@ -24,7 +23,7 @@ def main():
     base_path = Path(sys.argv[1])
     pca_count = int(os.environ.get("PCA_COUNT", 10))
 
-    in_path = base_path / "03_filtered" / "data.vcf.gz"
+    in_path = base_path / "02_merged" / "data.vcf.gz"
     out_path = base_path / "20_pca" / "out"
 
     # ensure output directory exists
