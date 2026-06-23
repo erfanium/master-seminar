@@ -1,0 +1,13 @@
+# fixed
+- paper structure and layout (added abstract, introduction, ...)
+- remove 2 samples
+- used dbscan
+- added many plots, data and tables
+- added per cluster and per compoenent detailed analyses
+
+- 
+
+# problems we have
+- anotated files issue
+- large clusters or small clusters?
+  
