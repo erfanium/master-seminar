@@ -340,7 +340,6 @@ plt.xlabel("PC1")
 plt.ylabel("PC2")
 plot_mode = "Weighted PCs" if CLUSTER_WEIGHT_EIGENVALUES else "Scaled PCs"
 plt.title(f"PCA 2D Plot ({plot_mode}, {CLUSTER_ALGO.upper()}, n={n_clusters})")
-plt.legend(fontsize=8)
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(os.path.join(output_dir, "pca_cluster_2d.png"), dpi=300)

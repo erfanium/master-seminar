@@ -12,7 +12,7 @@ if len(sys.argv) < 2:
 BASE_PATH = sys.argv[1]
 
 # File paths
-vcf_path = f"{BASE_PATH}/03_filtered/data.vcf.gz"
+vcf_path = f"{BASE_PATH}/02_merged/data.vcf.gz"
 cluster_path = f"{BASE_PATH}/30_cluster/pca_clusters_plink.tsv"
 cluster_profile_dir = f"{BASE_PATH}/31_cluster_profile"
 

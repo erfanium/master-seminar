@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import subprocess
 from pathlib import Path
@@ -21,7 +20,6 @@ def main():
         sys.exit(1)
 
     base_path = Path(sys.argv[1])
-    missing_to_ref = os.environ.get("MISSING_TO_REF", "true").lower() == "true"
 
     in_path = base_path / "01_indexed"
     out_path = base_path / "02_merged" / "data.vcf.gz"
@@ -30,9 +28,6 @@ def main():
     if not vcfs:
         print(f"No VCFs found in {in_path}")
         sys.exit(1)
-
-    flags = ["--missing-to-ref"] if missing_to_ref else []
-    print(f"Merge flags: {' '.join(flags) if flags else '(none)'}")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +38,7 @@ def main():
             "bcftools",
             "merge",
             "--force-single",
-            *flags,
+            "--missing-to-ref",
             *map(str, vcfs),
         ],
         stdout=subprocess.PIPE,
